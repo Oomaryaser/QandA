@@ -126,6 +126,182 @@
   const SKIPPED = -1; // sentinel for skipped question
   let advanceTimer = null;
 
+  // --- Audio helpers (for reliable playback) ---
+  let audioCtx = null;
+  function ensureAudioCtx(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }
+    return audioCtx;
+  }
+  async function resumeAudio(){
+    try{
+      const ctx = ensureAudioCtx();
+      if(!ctx) return;
+      if(ctx.state === 'suspended'){
+        await ctx.resume();
+      }
+    } catch(_){}
+  }
+  // Attempt to unlock audio on first user interaction
+  window.addEventListener('pointerdown', () => { resumeAudio(); }, { once:true });
+
+  function playPassSound(ctx){
+    try{
+      const master = ctx.createGain();
+      master.gain.value = 0.35; // louder than before
+      master.connect(ctx.destination);
+
+      // Layer 1: triangle arpeggio (C5 -> E5 -> G5)
+      const tri = ctx.createOscillator(); tri.type = 'triangle';
+      const tg = ctx.createGain(); tg.gain.value = 0.0001; tg.connect(master);
+      tri.connect(tg);
+      const t0 = ctx.currentTime; const step = 0.12;
+      const notes = [523.25, 659.25, 783.99];
+      notes.forEach((f, i) => {
+        const t = t0 + i*step;
+        tri.frequency.setValueAtTime(f, t);
+        tg.gain.setValueAtTime(0.0001, t);
+        tg.gain.exponentialRampToValueAtTime(0.28, t + 0.05);
+        tg.gain.exponentialRampToValueAtTime(0.0001, t + step);
+      });
+
+      // Layer 2: sine sparkle on top (G5 -> C6)
+      const sin = ctx.createOscillator(); sin.type = 'sine';
+      const sg = ctx.createGain(); sg.gain.value = 0.0001; sg.connect(master);
+      sin.connect(sg);
+      sin.frequency.setValueAtTime(783.99, t0 + step*0.5);
+      sin.frequency.linearRampToValueAtTime(1046.5, t0 + step*2);
+      sg.gain.setValueAtTime(0.0001, t0 + step*0.5);
+      sg.gain.exponentialRampToValueAtTime(0.22, t0 + step*0.5 + 0.05);
+      sg.gain.exponentialRampToValueAtTime(0.0001, t0 + step*2 + 0.1);
+
+      // Layer 3: short shimmer noise
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * (1 - i/data.length); }
+      noise.buffer = buffer;
+      const ng = ctx.createGain(); ng.gain.value = 0.08;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000;
+      noise.connect(ng).connect(hp).connect(master);
+
+      tri.start(t0); sin.start(t0 + step*0.4); noise.start(t0 + step);
+      const end = t0 + step*3 + 0.3;
+      tri.stop(end); sin.stop(end); noise.stop(end);
+    } catch(_){}
+  }
+  function playFailSound(ctx){
+    try{
+      const master = ctx.createGain();
+      master.gain.value = 0.8; // even louder
+      // Add a compressor to increase perceived loudness without clipping
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.setValueAtTime(-24, ctx.currentTime);
+      comp.knee.setValueAtTime(30, ctx.currentTime);
+      comp.ratio.setValueAtTime(12, ctx.currentTime);
+      comp.attack.setValueAtTime(0.003, ctx.currentTime);
+      comp.release.setValueAtTime(0.25, ctx.currentTime);
+      comp.connect(master);
+      master.connect(ctx.destination);
+      const base = 196.00; // G3
+      const seq = [base*1.0, base*0.84, base*0.75];
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+  lowpass.frequency.value = 3200; // allow more highs for presence
+      lowpass.Q.value = 0.9;
+      lowpass.connect(comp);
+      const o1 = ctx.createOscillator();
+      const o2 = ctx.createOscillator();
+      o1.type = 'triangle';
+      o2.type = 'triangle';
+      o1.detune.value = -7;
+      o2.detune.value = +7;
+  const g = ctx.createGain();
+  g.gain.value = 0.0001;
+      g.connect(lowpass);
+      o1.connect(g); o2.connect(g);
+      const t0 = ctx.currentTime;
+      const step = 0.22;
+      seq.forEach((f, i) => {
+        const t = t0 + i*step;
+        o1.frequency.setValueAtTime(f, t);
+        o2.frequency.setValueAtTime(f*0.995, t);
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.5, t + 0.06); // much stronger peak
+        g.gain.exponentialRampToValueAtTime(0.0001, t + step - 0.02);
+      });
+      // short noise sigh
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * (1 - i/data.length); }
+      noise.buffer = buffer;
+      const ng = ctx.createGain(); ng.gain.value = 0.28; // louder sigh
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
+      noise.connect(ng).connect(hp).connect(lowpass);
+
+      // Add a low sine "thump" layer for impact
+      const kick = ctx.createOscillator();
+      const kg = ctx.createGain();
+      kick.type = 'sine';
+      kg.gain.setValueAtTime(0.0001, ctx.currentTime);
+      kg.gain.exponentialRampToValueAtTime(0.7, ctx.currentTime + 0.02);
+      kg.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+      kick.frequency.setValueAtTime(140, ctx.currentTime);
+      kick.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.2);
+      kick.connect(kg).connect(comp);
+      o1.start(t0); o2.start(t0); kick.start(t0);
+      noise.start(t0 + seq.length*step - 0.1);
+      const end = t0 + seq.length*step + 0.35;
+      o1.stop(end); o2.stop(end); noise.stop(end); kick.stop(t0 + 0.36);
+    } catch(_){}
+  }
+  async function playResultSound(passed){
+    try{
+      const ctx = ensureAudioCtx();
+      if(!ctx) return;
+      if(ctx.state === 'suspended') await ctx.resume();
+      // Simple reverb send for more spatial feel
+      const reverbIn = ctx.createGain();
+      const reverbOut = ctx.createGain();
+      reverbIn.gain.value = 0.3; // send amount
+      reverbOut.gain.value = 0.4;
+      // Build a tiny feedback delay network (very lightweight)
+      const d1 = ctx.createDelay(); d1.delayTime.value = 0.045;
+      const d2 = ctx.createDelay(); d2.delayTime.value = 0.075;
+      const d3 = ctx.createDelay(); d3.delayTime.value = 0.12;
+      const fg = ctx.createGain(); fg.gain.value = 0.35;
+      const tone = ctx.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 3800;
+      // reverb network wiring
+      reverbIn.connect(d1); d1.connect(d2); d2.connect(d3); d3.connect(tone).connect(reverbOut);
+      d3.connect(fg).connect(d1); // feedback loop
+      reverbOut.connect(ctx.destination);
+
+      // Wrap the original play functions to also feed reverb
+      const originalDest = ctx.destination;
+      const mix = ctx.createGain(); mix.gain.value = 1.0;
+      mix.connect(originalDest);
+      mix.connect(reverbIn);
+
+      // Patch internal play functions to use 'mix' as destination by temporarily overriding connect
+      const nodeConnect = AudioNode.prototype.connect;
+      try{
+        AudioNode.prototype.connect = function(){
+          const args = Array.from(arguments);
+          if(args[0] === originalDest){ args[0] = mix; }
+          return nodeConnect.apply(this, args);
+        };
+        if(passed) playPassSound(ctx); else playFailSound(ctx);
+      } finally {
+        AudioNode.prototype.connect = nodeConnect;
+      }
+    } catch(_){}
+  }
+
   function loadState(){
     try {
       // Prefer localStorage for persistent progress
@@ -357,14 +533,36 @@
   function renderSummary(state){
     quizEl.innerHTML = '';
     const {c,w,u} = tally(state);
+    const total = questions.length;
+    const passed = c >= 6; // pass threshold
     const wrap = document.createElement('section');
     wrap.className = 'quiz';
     const header = document.createElement('article');
     header.className = 'question-card';
+    const passIcon = `
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.5 12.8l-2.3-2.3L5.8 12l3.7 3.7L18.2 7l-1.4-1.4-7.3 7.2z" fill="#16a34a"/>
+      </svg>`;
+    const failIcon = `
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="bhg" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#ef4444"/>
+            <stop offset="100%" stop-color="#991b1b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#bhg)" d="M45.5 8c-4.7 0-8.9 2.4-11.5 6.1C31.4 10.4 27.2 8 22.5 8 14.5 8 8 14.5 8 22.5c0 13.1 15.6 20.8 24.9 31.4.6.7 1.6.7 2.2 0C40.4 43.3 56 35.6 56 22.5 56 14.5 49.5 8 41.5 8h4z"/>
+        <path d="M40 14c-.6 0-1 .4-1 1l-.3 6.5-4.7-3.1a1 1 0 0 0-1.4 1.4l4.6 4.6-5.1 2.5a1 1 0 1 0 .9 1.8l5.8-2.3-.3 6.6a1 1 0 1 0 2 0l.3-7 5.4 3.6a1 1 0 1 0 1.1-1.7l-5.8-3.2 4.8-2.3a1 1 0 0 0-.9-1.8l-5.3 2.1.2-5.9c0-.6-.4-1-1-1z" fill="#1f2937" fill-opacity="0.35"/>
+      </svg>`;
     header.innerHTML = `
-      <h2 class="q-title">Final Result</h2>
+      <div class="summary-hero ${passed ? 'pass' : 'fail'}">
+        ${passed ? passIcon : failIcon}
+        <p class="msg">${passed ? 'Congratulations!' : 'Sorry, you can try again later'}</p>
+      </div>
+      ${passed ? '<div class="success-illustration"><img src="./assets/success-illustration.svg" alt="Success" loading="lazy"/></div>' : '<div class="fail-illustration"><img src="./assets/fail-illustration.svg" alt="Failure" loading="lazy"/></div>'}
+      <h2 class="q-title" style="margin-top:6px;">Final Result</h2>
       <div class="progress-stats" style="margin-top:8px;">
-        <div class="stat correct">Correct: ${c}</div>
+        <div class="stat correct">Correct: ${c} / ${total}</div>
         <div class="stat wrong">Wrong: ${w}</div>
         <div class="stat neutral">Unanswered: ${u}</div>
       </div>
@@ -400,6 +598,9 @@
     });
 
     quizEl.appendChild(wrap);
+
+  // Play result sound (no visible replay button)
+  playResultSound(passed);
   }
 
   // No custom dialog anymore; we'll use native confirm()

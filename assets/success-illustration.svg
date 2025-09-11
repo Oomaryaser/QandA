@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="Success illustration">
+  <defs>
+    <linearGradient id="sg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f2937" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#1f2937" stop-opacity="0.0"/>
+    </linearGradient>
+    <filter id="ss" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" rx="16" fill="#fff"/>
+  <g transform="translate(20,18)">
+    <rect x="0" y="0" width="200" height="124" rx="14" fill="#ecfdf5" stroke="#bbf7d0"/>
+    <g transform="translate(22,16)" filter="url(#ss)">
+      <circle cx="40" cy="36" r="28" fill="url(#sg1)"/>
+      <path d="M30 36l7 7 15-15" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(84,22)">
+      <rect x="0" y="0" width="92" height="10" rx="5" fill="#bbf7d0"/>
+      <rect x="0" y="18" width="72" height="10" rx="5" fill="#bbf7d0"/>
+      <rect x="0" y="36" width="60" height="10" rx="5" fill="#bbf7d0"/>
+    </g>
+    <g transform="translate(20,92)">
+      <rect x="0" y="0" width="160" height="10" rx="5" fill="#86efac"/>
+      <rect x="0" y="0" width="140" height="10" rx="5" fill="url(#sg1)"/>
+    </g>
+  </g>
+  <rect x="10" y="8" width="220" height="20" rx="10" fill="url(#sg2)"/>
+</svg>
