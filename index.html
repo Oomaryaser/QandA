@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>اختبار IVF و ICSI - أسئلة وأجوبة</title>
+  <title>IVF & ICSI Quiz</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23121731'/%3E%3Cpath d='M32 12c7 0 12 4.7 12 10.8 0 4.8-2.5 7.6-6.4 9.6-2.9 1.5-3.6 2.4-3.6 4.6v2h-6v-2.2c0-4.6 2.5-6.5 5.6-8.2 2.8-1.5 4.4-3 4.4-5.8 0-3.1-2.6-5.2-6-5.2-3.1 0-5.7 1.6-7.1 4.3l-5.4-3C21.3 14.1 26.2 12 32 12zm-3 36h6v6h-6z' fill='%236c9cff'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -16,22 +16,22 @@
     <main class="container">
       <header class="header">
         <div class="title-wrap">
-          <h1>أسئلة وأجوبة حول أطفال الأنابيب (IVF) والحقن المجهري (ICSI)</h1>
-          <p class="subtitle">اختر الإجابة الصحيحة</p>
+          <h1>IVF & ICSI Quiz</h1>
+          <p class="subtitle">Pick the correct answer. Your progress is saved in your browser.</p>
         </div>
-        <button id="resetBtn" class="btn btn-ghost" aria-haspopup="dialog" aria-controls="confirmResetDialog">
-          إعادة من البداية
-        </button>
+        <div style="display:flex; gap:8px;">
+          <button id="resetBtn" class="btn btn-ghost" type="button">Reset</button>
+        </div>
       </header>
 
-      <section class="progress-card" aria-label="شريط التقدّم">
+      <section class="progress-card" aria-label="Progress bar">
         <div class="progress-stats">
-          <div class="stat correct" aria-live="polite">صحيحة: <span id="correctCount">0</span></div>
-          <div class="stat wrong" aria-live="polite">خاطئة: <span id="wrongCount">0</span></div>
-          <div class="stat neutral" aria-live="polite">غير مجابة: <span id="unansweredCount">10</span></div>
-          <div class="stat" style="background: rgba(255,207,92,0.12); color:#ffe6ae;" aria-live="polite">تم التخطي: <span id="skippedCount">0</span></div>
+          <div class="stat correct" aria-live="polite">Correct: <span id="correctCount">0</span></div>
+          <div class="stat wrong" aria-live="polite">Wrong: <span id="wrongCount">0</span></div>
+          <div class="stat neutral" aria-live="polite">Unanswered: <span id="unansweredCount">10</span></div>
+          <div class="stat" style="background: rgba(255,207,92,0.12); color:#8a6400;" aria-live="polite">Skipped: <span id="skippedCount">0</span></div>
         </div>
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-label="شريط يوضح عدد الإجابات الصحيحة والخاطئة">
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-label="Bar showing correct, wrong, skipped, and remaining">
           <div id="barCorrect" class="bar bar-correct" style="width:0%"></div>
           <div id="barWrong" class="bar bar-wrong" style="width:0%"></div>
           <div id="barSkipped" class="bar bar-skipped" style="width:0%"></div>
@@ -39,9 +39,10 @@
         </div>
       </section>
 
-      <section id="quiz" class="quiz" aria-label="قائمة الأسئلة"></section>
+      <section id="quiz" class="quiz" aria-label="Questions"></section>
 
       <footer class="footer">
+        <small>FAYA DEV LTD © 2025</small>
       </footer>
     </main>
 

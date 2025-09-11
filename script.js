@@ -122,7 +122,7 @@
   const resetBtn = $('#resetBtn');
 
   const letters = ['A', 'B', 'C', 'D'];
-  const AUTO_ADVANCE_DELAY = 1500; // ms (slightly slower so المستخدم يلحق يشوف الصحيحة)
+  const AUTO_ADVANCE_DELAY = 1500; // ms (slightly slower so the user can see the correct answer)
   const SKIPPED = -1; // sentinel for skipped question
   let advanceTimer = null;
 
@@ -218,10 +218,10 @@
         <div class="q-index">${idx+1} / ${questions.length}</div>
         <h2 class="q-title">${q.q}</h2>
       </div>
-      <div class="options" role="radiogroup" aria-label="خيارات السؤال ${idx+1}"></div>
+      <div class="options" role="radiogroup" aria-label="Options for question ${idx+1}"></div>
       <div class="feedback" id="fb-${idx}" aria-live="polite"></div>
       <div class="actions">
-        <button id="skipBtn" class="btn btn-secondary" type="button">تخطي</button>
+        <button id="skipBtn" class="btn btn-secondary" type="button">Skip</button>
       </div>
     `;
     const optionsEl = $('.options', card);
@@ -270,16 +270,16 @@
       return;
     }
     if(ans === SKIPPED){
-      fb.textContent = 'تم التخطي (غير مجاب)';
+      fb.textContent = 'Skipped (unanswered)';
       fb.className = 'feedback skipped';
       return;
     }
     if(ans === questions[i].answer){
-      fb.textContent = 'إجابة صحيحة';
+      fb.textContent = 'Correct answer';
       fb.className = 'feedback correct';
     } else {
       const correctLetter = letters[questions[i].answer];
-      fb.textContent = `إجابة خاطئة. الإجابة الصحيحة: ${correctLetter}`;
+      fb.textContent = `Wrong. Correct answer: ${correctLetter}`;
       fb.className = 'feedback wrong';
     }
   }
@@ -362,11 +362,11 @@
     const header = document.createElement('article');
     header.className = 'question-card';
     header.innerHTML = `
-      <h2 class="q-title">النتيجة النهائية</h2>
+      <h2 class="q-title">Final Result</h2>
       <div class="progress-stats" style="margin-top:8px;">
-        <div class="stat correct">صحيحة: ${c}</div>
-        <div class="stat wrong">خاطئة: ${w}</div>
-        <div class="stat neutral">غير مجابة: ${u}</div>
+        <div class="stat correct">Correct: ${c}</div>
+        <div class="stat wrong">Wrong: ${w}</div>
+        <div class="stat neutral">Unanswered: ${u}</div>
       </div>
     `;
     wrap.appendChild(header);
@@ -375,18 +375,18 @@
       const chosen = state.answers[i];
       const review = document.createElement('article');
       review.className = 'question-card';
-      const status = (chosen == null || chosen === SKIPPED) ? 'غير مجاب' : (chosen === q.answer ? 'صحيح' : 'خاطئ');
+      const status = (chosen == null || chosen === SKIPPED) ? 'Unanswered' : (chosen === q.answer ? 'Correct' : 'Wrong');
       review.innerHTML = `
         <div class="q-header">
           <div class="q-index">${i+1}</div>
           <h3 class="q-title">${q.q}</h3>
         </div>
-        <div class="feedback ${chosen === q.answer ? 'correct' : ((chosen == null || chosen === SKIPPED) ? 'skipped' : 'wrong')}">الحالة: ${status}</div>
+        <div class="feedback ${chosen === q.answer ? 'correct' : ((chosen == null || chosen === SKIPPED) ? 'skipped' : 'wrong')}">Status: ${status}</div>
         <ul style="list-style:none; padding:0; margin:10px 0 0; display:grid; gap:8px;">
           ${q.options.map((opt, k) => {
             const isCorrect = k === q.answer;
             const isChosen = (chosen != null && chosen !== SKIPPED) && (k === chosen);
-            let badge = isCorrect ? 'الصحيحة' : (isChosen ? 'اختيارك' : '');
+            let badge = isCorrect ? 'Correct' : (isChosen ? 'Your choice' : '');
             const color = isCorrect ? '#2dd36f' : (isChosen ? '#ff5d6c' : '#a5b6d6');
             return `<li style="padding:8px 10px; border-radius:10px; background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:8px;">
                       <span class="letter" style="min-width:24px; color:#a8c3ff; font-weight:700;">${letters[k]}.</span>
@@ -413,9 +413,11 @@
 
   // Wire events
   resetBtn.addEventListener('click', () => {
-    const ok = window.confirm('هل تريد بالتأكيد إعادة الاختبار من البداية؟ سيتم مسح اختياراتك الحالية.');
+    const ok = window.confirm('Reset the quiz and clear your answers?');
     if (ok) doReset();
   });
+
+  // Light theme only - no theme toggle needed
 
   // first render
   render();
