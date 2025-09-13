@@ -76,6 +76,14 @@ body{
 .option input:checked::after{ transform: scale(1); }
 .option .letter{ font-weight:700; color: var(--accent); }
 
+/* Locked/disabled state */
+.question-card.locked { opacity: 0.98; }
+.option input:disabled { border-color: #cbd5e1; background: #e2e8f0; cursor: not-allowed; }
+.option input:disabled::after{ background: #94a3b8; }
+.btn[disabled]{ opacity: .6; cursor: not-allowed; }
+/* When locked, make options non-interactive at the label level too */
+.question-card.locked .option{ pointer-events: none; cursor: default; }
+
 .feedback{ font-size: 0.95rem; color: var(--muted); margin: 8px 2px 2px; min-height: 1.2em; }
 .feedback.correct{ color: var(--success); }
 .feedback.wrong{ color: var(--danger); }

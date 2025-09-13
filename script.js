@@ -387,6 +387,7 @@
     if(idx >= questions.length) idx = questions.length - 1;
 
     const q = questions[idx];
+    const locked = state.answers[idx] !== null && state.answers[idx] !== undefined; // prevent changes if already answered/skipped
     const card = document.createElement('article');
     card.className = 'question-card';
     card.innerHTML = `
@@ -397,7 +398,7 @@
       <div class="options" role="radiogroup" aria-label="Options for question ${idx+1}"></div>
       <div class="feedback" id="fb-${idx}" aria-live="polite"></div>
       <div class="actions">
-        <button id="skipBtn" class="btn btn-secondary" type="button">Skip</button>
+        <button id="skipBtn" class="btn btn-secondary" type="button" ${locked ? 'disabled' : ''}>Skip</button>
       </div>
     `;
     const optionsEl = $('.options', card);
@@ -410,11 +411,12 @@
       option.className = 'option';
       option.dataset.state = isCorrect ? 'correct' : isWrong ? 'wrong' : '';
       option.innerHTML = `
-        <input type="radio" name="q-${idx}" ${selected ? 'checked' : ''} aria-checked="${selected ? 'true':'false'}" aria-label="${letters[i]}" />
+        <input type="radio" name="q-${idx}" ${selected ? 'checked' : ''} ${locked ? 'disabled' : ''} aria-checked="${selected ? 'true':'false'}" aria-label="${letters[i]}" />
         <span class="letter">${letters[i]}.</span>
         <span class="text">${opt}</span>
       `;
       option.addEventListener('click', () => {
+        if(locked) return; // ignore further clicks if locked
         const input = option.querySelector('input');
         if(input) input.checked = true;
         onSelect(idx, i);
@@ -462,6 +464,10 @@
 
   function onSelect(qIndex, choiceIndex){
     const state = loadState();
+    // Guard: if already answered or skipped, ignore further selections
+    if(state.answers[qIndex] !== null && state.answers[qIndex] !== undefined){
+      return;
+    }
     state.answers[qIndex] = choiceIndex;
     saveState(state);
 
@@ -476,8 +482,12 @@
         else if(isWrong) optEl.dataset.state = 'wrong';
         else optEl.dataset.state = '';
         const input = $('input', optEl);
-        if(input) input.checked = isSelected;
+        if(input){ input.checked = isSelected; input.disabled = true; }
       });
+      // disable further interaction
+      const skipBtn = $('#skipBtn', card);
+      if(skipBtn) skipBtn.disabled = true;
+      card.classList.add('locked');
     }
     applyFeedback(state);
     updateProgress(state);
@@ -515,12 +525,20 @@
 
   function onSkip(qIndex){
     const state = loadState();
+    if(state.answers[qIndex] !== null && state.answers[qIndex] !== undefined){ return; }
     // mark as skipped (unanswered)
     state.answers[qIndex] = SKIPPED;
     const nextIndex = qIndex + 1;
     if(nextIndex < questions.length){
       state.index = nextIndex;
       saveState(state);
+      // lock current card UI
+      const card = quizEl.firstElementChild;
+      if(card){
+        $$('.option input', card).forEach(inp => inp.disabled = true);
+        const skipBtn = $('#skipBtn', card); if(skipBtn) skipBtn.disabled = true;
+        card.classList.add('locked');
+      }
       render();
     } else {
       state.index = questions.length;
