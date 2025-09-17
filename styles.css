@@ -119,8 +119,24 @@ body{
 
 /* Fail illustration */
 .fail-illustration{ margin: 8px 0 6px; }
-.fail-illustration img{ width: 100%; max-width: 420px; display:block; border-radius: 14px; border: 1px solid #fecaca; background:#fff; box-shadow: 0 6px 20px rgba(220,38,38,0.15); }
+.fail-illustration img{
+  width: 100%;
+  max-width: 420px;
+  display:block;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
 
 /* Success illustration */
 .success-illustration{ margin: 8px 0 6px; }
-.success-illustration img{ width: 100%; max-width: 420px; display:block; border-radius: 14px; border: 1px solid #bbf7d0; background:#fff; box-shadow: 0 6px 20px rgba(22,163,74,0.15); }
+.success-illustration img{
+  width: 100%;
+  max-width: 420px;
+  display:block;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
