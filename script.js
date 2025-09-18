@@ -413,7 +413,7 @@
         ${passed ? passIcon : failIcon}
         <p class="msg">${passed ? 'Congratulations!' : 'Sorry, you can try again later'}</p>
       </div>
-      ${passed ? '<div class="success-illustration"><img src="./assets/1.gif" alt="Success" loading="lazy"/></div>' : '<div class="fail-illustration"><img src="./assets/2.gif" alt="Failure" loading="lazy"/></div>'}
+      ${passed ? '<div class="success-illustration"><img src="./assets/1.gif" alt="Success" loading="lazy"/></div>' : ''}
       <h2 class="q-title" style="margin-top:6px;">Final Result</h2>
       <div class="progress-stats" style="margin-top:8px;">
         <div class="stat correct">Correct: ${c} / ${total}</div>
